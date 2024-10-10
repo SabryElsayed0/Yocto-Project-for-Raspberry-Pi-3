@@ -35,11 +35,24 @@ The project is built using **kernel version 5.15.x** and uses **systemd** as the
 
 #### Download Yocto
 
-- Prepare **Environment** on the host machine:
+- Prepare **Environment** on the host machine(install dependencies):
 
   ```bash
   sudo apt install gawk wget git diffstat unzip texinfo gcc build-essential chrpath socat cpio python3 python3-pip python3-pexpect xz-utils debianutils iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev python3-subunit mesa-common-dev zstd liblz4-tool file locales libacl1
   sudo locale-gen en_US.UTF-8
 '''
+### Choose YOCTO Release (Kirkstone Release)
+
+The Yocto Project release process is predictable and consists of both major and minor (point) releases:
+
+- **4.1 (“Langdale”)**
+- **4.0 (“Kirkstone”)** (selected for this project)
+- **3.4 (“Honister”)**
+
+See all releases in this [link](https://wiki.yoctoproject.org/wiki/Releases).
+
+![yocto_releases](./yocto_releases.png)
+
+
 
 
