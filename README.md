@@ -27,13 +27,13 @@ The project is built using **kernel version 5.15.x** and uses **systemd** as the
 
 ### 1. Pre-development Stage
 
-#### Hardware and Software Preparation
+#### 1 - Software Preparation
 
 - Download Yocto Project extension for VS Code (**Yocto Project BitBake**).
 
   ![Yocto Project BitBake](./Yocto_Project_Bitbake.png)
 
-#### Download Yocto
+#### 2- Install Dependencies
 
 - Prepare **Environment** on the host machine(install dependencies):
 
@@ -43,7 +43,7 @@ The project is built using **kernel version 5.15.x** and uses **systemd** as the
   ```
 
 
-### Choose YOCTO Release (Kirkstone Release)
+#### 3 - Choose YOCTO Release (Kirkstone Release)
 
 The Yocto Project release process is predictable and consists of both major and minor (point) releases:
 
@@ -57,15 +57,41 @@ See all releases in this [link](https://wiki.yoctoproject.org/wiki/Releases).
 
 ---
 
-### Cloning Poky Kirkstone
+#### 4 - Cloning Poky Kirkstone
 
 To clone the Poky repository for the Kirkstone release, run the following command:
 
 ```bash
 git clone -b kirkstone https://github.com/yoctoproject/poky
 ```
+#### 5- Understanding Poky
 
-`
+Poky is the Yocto Project reference system and is composed of a collection of tools and metadata. It is platform-independent and performs cross-compiling, using the BitBake tool, OpenEmbedded Core, and a default set of metadata, as shown in the following figure. It provides the mechanism to build and combine thousands of distributed open source projects to form a fully customizable, complete, and coherent Linux software stack.
+
+Poky's main objective is to provide all the features an embedded developer needs.
+
+![understanding_poky](./understanding_poky.png)
+
+
+
+
+
+### 2. Development stage
+
+#### Integrate BSP for raspberry pi
+1- go to  (https://layers.openembedded.org/layerindex/branch/master/layers/)
+
+2- search for raspberrypi , and select meta-raspberrypi
+![meta-raspberrypi](./meta-raspberrypi.png)
+
+3- clone meta-raspberrypi from here
+
+git clone -b kirkstone git://git.yoctoproject.org/meta-raspberrypi
+![meta-raspberrypi-git](./meta-raspberrypi-git.png)
+
+4- add the layer to your yocto project bitbake-layers add-layer /PATH/TO/meta-raspberrypi
+
+
 
 
 
