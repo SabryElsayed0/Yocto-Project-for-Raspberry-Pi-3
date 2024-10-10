@@ -3,3 +3,4 @@ Yocto-based build for Raspberry Pi 3 with SSH, WiFi support, Nano editor, Qt5 fo
 
 # Project Overview
 
+![Project Overview](./project_overview.png)
