@@ -91,6 +91,120 @@ git clone -b kirkstone git://git.yoctoproject.org/meta-raspberrypi
 
 4- add the layer to your yocto project bitbake-layers add-layer /PATH/TO/meta-raspberrypi
 
+#### Integrate Qt-5
+1- go to  (https://layers.openembedded.org/layerindex/branch/master/layers/)
+
+2- search for qt , and select meta-qt5
+![meta-qt5](./meta-qt5.png.png)
+
+3- you will encounter this error
+![qt_error](./qt_error.png)
+
+4- to solve this error you should integrate qt-5 dependencies
+
+![qt-5-dependncies](./qt-5-dependncies.png)
+
+5- clone the openembedded-core
+```bash
+git clone -b kirkstone git://git.openembedded.org/openembedded-core
+```
+6- so now after cloning both you will find meta-oe layer inside openembedded-core layer by default
+7- add meta-oe to the bblayers.conf
+
+```bash
+bitbake-layers add-layer /PATH/TO/meta-customRaspi/meta-qt5
+```
+
+### 3-Creating SW Layer meta-IVI Layer
+
+1- create layer
+```bash
+bitbake create-layer meta-IVI
+```
+
+2- add meta-IVI to the bblayers.conf
+
+```bash
+bitbake add-layer meta-IVI
+```
+### 4-creating DISTRO Layer
+1- create meta-info-distro layer
+```bash
+bitbake create-layer meta-info-distro
+```
+
+2- add meta-info-distro to the bblayers.conf
+
+``` bash 
+bitbake add-layer meta-info-distro
+```
+
+3 - go to meta-info-distro , and in conf directory , create distro directory
+
+4- go to distro , create infotainment.conf
+
+![info-distro](./info-distro.png)
+
+5 - add this at infotainment.conf to add the features (ex- systemd)
+```bash
+# Distibution Information.
+DISTRO="infotainment"
+DISTRO_NAME="Bullet-Infotainment"
+DISTRO_VERSION="1.0"
+
+MAINTAINER="sabryelsayedfarg@gmail.com"
+
+
+# SDK Information.
+SDK_VENDOR = "-bulletSDK"
+SDK_VERSION = "${@d.getVar('DISTRO_VERSION').replace('snapshot-${METADATA_REVISION}', 'snapshot')}"
+SDK_VERSION[vardepvalue] = "${SDK_VERSION}"
+
+SDK_NAME = "${DISTRO}-${TCLIBC}-${SDKMACHINE}-${IMAGE_BASENAME}-${TUNE_PKGARCH}-${MACHINE}"
+# Installation path --> can be changed to ${HOME}-${DISTRO}-${SDK_VERSION}
+SDKPATHINSTALL = "/opt/${DISTRO}/${SDK_VERSION}" 
+
+# Disribution Feature --> NOTE: used to add customize package (for package usage).
+
+# infotainment --> INFOTAINMENT
+
+INFOTAINMENT_DEFAULT_DISTRO_FEATURES = "largefile opengl ptest multiarch vulkan x11 bluez5 bluetooth wifi qt5"
+INFOTAINMENT_DEFAULT_EXTRA_RDEPENDS = "packagegroup-core-boot"
+INFOTAINMENT_DEFAULT_EXTRA_RRECOMMENDS = "kernel-module-af-packet"
+
+# TODO: to be org.
+
+DISTRO_FEATURES ?= "${DISTRO_FEATURES_DEFAULT} ${INFOTAINMENT_DEFAULT_DISTRO_FEATURES} userland"
+
+require conf/distro/include/systemd.inc 
+
+# prefered version for packages.
+PREFERRED_VERSION_linux-yocto ?= "5.15%"
+PREFERRED_VERSION_linux-yocto-rt ?= "5.15%"
+
+
+# Build System configuration.
+
+LOCALCONF_VERSION="2"
+
+# add poky sanity bbclass
+INHERIT += "poky-sanity"
+```
+
+6 - this distro has bluetooth,wifi,qt5 
+![distro_features](./distro_features.png)
+
+7 - add those to DISTRO_FEATURES
+![distro_Var](./distro_Var.png)
+
+8- configure linux version 
+
+![linux_version](./linux_version.png)
+
+
+
+
+
 
 
 
