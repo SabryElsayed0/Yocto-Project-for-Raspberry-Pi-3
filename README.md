@@ -286,9 +286,99 @@ recipetool create -o nano_1.0.bb  https://git.savannah.gnu.org/git/nano.git
 ```
 ![nano](./nano.png)
 
-6- add this to ivi-test-image.bb
+7- bitbake -c fetch nano  ---> here I only run specifc task of nano recipe (fetch)
+8- bitbake -c unpack nano  ---> here I only run specifc task of nano recipe (unpack)
+
+6- add do_configre and do_build to nano receipe
+```bash
+do_configure(){
+    oe_runconf
+}
+
+do_build(){
+
+    oe_runmake
+}
+```
+7-assure to install autopoint ----> (sudo apt install autopoint)
+
+8-run ./autogen.sh from sources in the "nano" directory,-------> to generate ./configure file to excute by oe_runconf
+```bash
+## here to get the source dir
+bitbake -e nano | grep "^S="  ----> to the path of the source file of nano after downloading
+## go to this path
+run ./autogen.sh
+```
+9-run bitbake -c configure nano
+10- run bitbake nano
+
+### 9- integrate rpiplay
+ 1- go to meta-IVI directory
+ 2- create receipes-info and go to it
+ 3- create rpi-play directory
+ 4- create rpiplay.bb
+```bash
+recipetool create -o rpi-play_1.0.bb https://github.com/FD-/RPiPlay      
+ 3- create audio.bbclass
+```
+
+5-replace the content of rpi-play_1.0.bb to include some depencies
+```bash
+LICENSE = "Unknown"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=1ebbd3e34237af26da5dc08a4e440464 \
+                    file://lib/llhttp/LICENSE-MIT;md5=f5e274d60596dd59be0a1d1b19af7978 \
+                    file://lib/playfair/LICENSE.md;md5=c7cd308b6eee08392fda2faed557d79a"
+
+SRC_URI = "git://github.com/FD-/RPiPlay;protocol=https;branch=master \
+           file://0001_fix_include_dir_gstreamer.patch"           
+# Modify these as desired
+PV = "1.0+git${SRCPV}"
+SRCREV = "64d0341ed3bef098c940c9ed0675948870a271f9"
+
+S = "${WORKDIR}/git"
 
 
+# NOTE: the following library dependencies are unknown, ignoring: brcmEGL plist bcm_host plist-2 brcmGLESv2 vchiq_arm openmaxil vcos
+#       (this is based on recipes that have previously been built and packaged)
+DEPENDS = " userland  avahi libplist mdns openssl glib-2.0 gst-devtools gstreamer1.0 gstreamer1.0-plugins-base gst-examples gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly "
+
+# TODO: check libplist and avahi is runtime and compile or runtime only.
+RDEPENDS_${PN} = " avahi libplist gstreamer1.0-plugins-base gstreamer1.0-plugins-good "
+
+inherit cmake pkgconfig
+
+# Specify any options you want to pass to cmake using EXTRA_OECMAKE:
+EXTRA_OECMAKE        = ""
+TARGET_LDFLAGS      += "-Wl,--copy-dt-needed-entries"
+EXTRA_OEMAKE:append  = 'LDFLAGS="${TARGET_LDFLAGS}"'
+```
+
+### 10- integrate AUDIO
+- note this is the view of the audio stack
+  
+  ![audio](audio_stack.png)
+
+ 1- go to meta-IVI directory
+ 2- create classes directory and go to it
+ 3- create audio.bbclass
+ ![audio_class](audio_class.png)
+ 
+ 4- add this to audio.bbclass
+ ```bash
+IMAGE_INSTALL:append = " pavucontrol pulseaudio pulseaudio-module-dbus-protocol pulseaudio-server \
+                        pulseaudio-module-loopback pulseaudio-module-bluez5-device pulseaudio-module-bluez5-discover \
+                        alsa-utils alsa-plugins bluez5 packagegroup-tools-bluetooth alsa-tools \
+                        packagegroup-rpi-test rpi-play can-utils net-tools gstreamer1.0 alsa-topology-conf \
+                        alsa-ucm-conf alsa-state alsa-lib qtbase-plugins libsocketcan qtquickcontrols \
+                        qtquickcontrols2 qtgraphicaleffects qtmultimedia qtserialbus qtquicktimeline \
+                        qtvirtualkeyboard i2c-tools hostapd iptables iproute2 iputils qtbase-examples \
+                        gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+                            "
+```
+
+ 
+
+   
 
 
  
