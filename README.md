@@ -202,6 +202,32 @@ INHERIT += "poky-sanity"
 ![linux_version](./linux_version.png)
 
 
+9-add systemd to the distro
+- go to meta-info-distro/conf/distro
+- create include directory
+- create systemd.inc
+
+ ![systemd](./systemd.png) 
+
+ - at systemd.inc at this 
+```bash
+DISTRO_FEATURES:append = " systemd "
+VIRTUAL-RUNTIME_init_manager = "systemd"
+VIRTUAL-RUNTIME_initscript = "systemd-compat-units"
+```
+
+- go to infotainment.conf and include systemd.inc
+  ```bash
+  require conf/distro/include/systemd.inc
+  ```
+
+
+![include_systemd](./include_systemd.png)
+
+
+
+
+
 
 
 
