@@ -224,6 +224,76 @@ VIRTUAL-RUNTIME_initscript = "systemd-compat-units"
 
 ![include_systemd](./include_systemd.png)
 
+### 5-create your own image recipe (ivi-test-image)
+ 1- go to meta-IVI directory
+ 2- create receipes-core directory
+ 3- go to receipes-core 
+ 4- create images directory 
+ 5- create ivi-test-image.bb
+ 6- add this to ivi-test-image.bb
+
+ ```bash
+# include base image ----------->
+# 1-poky
+# 2- BSP layer
+
+require recipes-core/images/rpi-test-image.bb
+
+
+#2 - set of local variables
+SUMMARY = " IVI Testing Image that include rpi func + helloworld package recipes "
+
+
+inherit audio 
+
+#3- customize the image 
+IMAGE_INSTALL:append=" helloworld " 
+
+
+
+# IMAGE_INSTALL ssh
+# allow root access through ssh 
+# access root through through ssh using empty password 
+IMAGE_FEATURES:append=" debug-tweaks"
+```
+### 6- Access root through through ssh using empty password
+1- go to ivi-test-image.bb
+2- add debug-tweaks
+```bash
+# IMAGE_INSTALL ssh
+# allow root access through ssh 
+# access root through through ssh using empty password 
+IMAGE_FEATURES:append=" debug-tweaks"
+```
+
+### 7-Inegrate ssh 
+1-go to ivi-test-image.bb
+2- add openssh
+```bash
+#3- customize the image 
+IMAGE_INSTALL:append=" openssh "
+```
+
+### 8- Inegrate nano
+1- go to meta-IVI directory
+2- create receipes-editor
+3- go to receipes-editor
+4- create nano directory 
+5- create nano receipe using this 
+
+```bash
+recipetool create -o nano_1.0.bb  https://git.savannah.gnu.org/git/nano.git
+```
+![nano](./nano.png)
+
+6- add this to ivi-test-image.bb
+
+
+
+
+ 
+ 
+
 
 
 
