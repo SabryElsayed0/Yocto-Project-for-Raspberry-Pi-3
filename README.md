@@ -359,6 +359,146 @@ EXTRA_OEMAKE:append  = 'LDFLAGS="${TARGET_LDFLAGS}"'
 6 - create rpiplay direcotory that included this patch 0001_fix_include_dir_gstreamer.patch
 ![patch](patch.png)
 
+7 - go to 0001_fix_include_dir_gstreamer.patch and add this 
+```bash
+diff --git a/lib/logger.h b/lib/logger.h
+old mode 100755
+new mode 100644
+diff --git a/renderers/CMakeLists.txt b/renderers/CMakeLists.txt
+index e561250..76d9144 100755
+--- a/renderers/CMakeLists.txt
++++ b/renderers/CMakeLists.txt
+@@ -1,14 +1,7 @@
+ cmake_minimum_required(VERSION 3.4.1)
+ 
+-# Common Linux cflags
+-if( UNIX AND NOT APPLE )
+-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT   -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -Wall -g" )
+-endif()
+-
+ # Common x86/x86_64 cflags
+-if( CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)" )
+-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -march=native" )
+-endif()
++
+ 
+ # Always compile the dummy renderers
+ set( RENDERER_FLAGS "${RENDERER_FLAGS} -DHAS_DUMMY_RENDERER" )
+@@ -17,20 +10,20 @@ set( RENDERER_LINK_LIBS "" )
+ set( RENDERER_INCLUDE_DIRS "" )
+ 
+ # Check for availability of OpenMAX libraries on Raspberry Pi
+-find_library( BRCM_GLES_V2 brcmGLESv2 HINTS ${CMAKE_SYSROOT}/opt/vc/lib/ )
+-find_library( BRCM_EGL brcmEGL HINTS ${CMAKE_SYSROOT}/opt/vc/lib/ )
+-find_library( OPENMAXIL openmaxil HINTS ${CMAKE_SYSROOT}/opt/vc/lib/ )
+-find_library( BCM_HOST bcm_host HINTS ${CMAKE_SYSROOT}/opt/vc/lib/ )
+-find_library( VCOS vcos HINTS ${CMAKE_SYSROOT}/opt/vc/lib/ )
+-find_library( VCHIQ_ARM vchiq_arm HINTS ${CMAKE_SYSROOT}/opt/vc/lib/ )
++find_library( BRCM_GLES_V2 brcmGLESv2 HINTS ${CMAKE_SYSROOT}/usr/lib/ )
++find_library( BRCM_EGL brcmEGL HINTS ${CMAKE_SYSROOT}/usr/lib/ )
++find_library( OPENMAXIL openmaxil HINTS ${CMAKE_SYSROOT}/usr/lib/ )
++find_library( BCM_HOST bcm_host HINTS ${CMAKE_SYSROOT}/usr/lib/ )
++find_library( VCOS vcos HINTS ${CMAKE_SYSROOT}/usr/lib/ )
++find_library( VCHIQ_ARM vchiq_arm HINTS ${CMAKE_SYSROOT}/usr/lib/ )
+ 
+ if( BRCM_GLES_V2 AND BRCM_EGL AND OPENMAXIL AND BCM_HOST AND VCOS AND VCHIQ_ARM )
+   # We have OpenMAX libraries available! Use them!
+   message( STATUS "Found OpenMAX libraries for Raspberry Pi" )
+-  include_directories( ${CMAKE_SYSROOT}/opt/vc/include/ 
+-  	${CMAKE_SYSROOT}/opt/vc/include/interface/vcos/pthreads 
+-  	${CMAKE_SYSROOT}/opt/vc/include/interface/vmcs_host/linux 
+-  	${CMAKE_SYSROOT}/opt/vc/src/hello_pi/libs/ilclient )
++  include_directories( ${CMAKE_SYSROOT}/usr/include/ 
++  	${CMAKE_SYSROOT}/usr/include/interface/vcos/pthreads 
++  	${CMAKE_SYSROOT}/usr/include/interface/vmcs_host/linux 
++  	${CMAKE_SYSROOT}/usr/src/hello_pi/libs/ilclient )
+ 
+   option(BUILD_SHARED_LIBS "" OFF)
+   add_subdirectory(fdk-aac EXCLUDE_FROM_ALL)
+@@ -38,7 +31,7 @@ if( BRCM_GLES_V2 AND BRCM_EGL AND OPENMAXIL AND BCM_HOST AND VCOS AND VCHIQ_ARM
+ 
+   set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX   -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi" )
+   
+-  aux_source_directory( ${CMAKE_SYSROOT}/opt/vc/src/hello_pi/libs/ilclient/ ilclient_src )
++  aux_source_directory( ${CMAKE_SYSROOT}/usr/src/hello_pi/libs/ilclient/ ilclient_src )
+   set( DIR_SRCS ${ilclient_src} )
+   add_library( ilclient STATIC ${DIR_SRCS} )
+ 
+@@ -52,6 +45,22 @@ else()
+   message( STATUS "OpenMAX libraries not found, skipping compilation of Raspberry Pi renderer" )
+ endif()
+ 
++
++
++# use gstreamer.
++include_directories(	${CMAKE_SYSROOT}/usr/include/gstreamer-1.0/ 
++			${CMAKE_SYSROOT}/usr/include/glib-2.0/
++			${CMAKE_SYSROOT}/usr/include
++			${CMAKE_SYSROOT}/usr/lib/glib-2.0/include/
++			${CMAKE_SYSROOT}/usr/lib/gstreamer-1.0/include/
++			${CMAKE_SYSROOT}/usr/lib/
++		   )
++link_libraries ( ${CMAKE_SYSROOT}/usr/lib/ 
++		 ${CMAKE_SYSROOT}/lib/ 
++		 ${CMAKE_SYSROOT}/usr/lib/gstreamer-1.0 
++		 ${CMAKE_SYSROOT}/usr/lib/glib-2.0
++	       )
++
+ # Check for availability of gstreamer
+ find_package( PkgConfig )
+ if( PKG_CONFIG_FOUND )
+@@ -71,6 +80,11 @@ else()
+   message( STATUS "pkg-config not found, skipping compilation of GStreamer renderer" )
+ endif()
+ 
++
++
++
++
++
+ # Create the renderers library and link against everything
+ add_library( renderers STATIC ${RENDERER_SOURCES})
+ target_link_libraries ( renderers ${RENDERER_LINK_LIBS} )
+diff --git a/renderers/audio_renderer_gstreamer.c b/renderers/audio_renderer_gstreamer.c
+index e461ac3..b7a284b 100644
+--- a/renderers/audio_renderer_gstreamer.c
++++ b/renderers/audio_renderer_gstreamer.c
+@@ -20,7 +20,7 @@
+ #include "audio_renderer.h"
+ #include <assert.h>
+ #include <math.h>
+-#include <gst/app/gstappsrc.h>
++#include <gstreamer-1.0/gst/app/gstappsrc.h>
+ 
+ typedef struct audio_renderer_gstreamer_s {
+     audio_renderer_t base;
+diff --git a/renderers/video_renderer.h b/renderers/video_renderer.h
+old mode 100755
+new mode 100644
+diff --git a/renderers/video_renderer_dummy.c b/renderers/video_renderer_dummy.c
+old mode 100755
+new mode 100644
+diff --git a/renderers/video_renderer_gstreamer.c b/renderers/video_renderer_gstreamer.c
+index dee6d50..7043e4b 100644
+--- a/renderers/video_renderer_gstreamer.c
++++ b/renderers/video_renderer_gstreamer.c
+@@ -19,8 +19,8 @@
+ 
+ #include "video_renderer.h"
+ #include <assert.h>
+-#include <gst/gst.h>
+-#include <gst/app/gstappsrc.h>
++#include <gstreamer-1.0/gst/gst.h>
++#include <gstreamer-1.0/gst/app/gstappsrc.h>
+ #include <stdio.h>
+ 
+ typedef struct video_renderer_gstreamer_s {
+
+```
+
+8 - if you encounter this error
+![rpiplay_cmake_error](rpiplay_cmake_error.png)
+
 ### 10- integrate AUDIO
 - note this is the view of the audio stack
   
