@@ -371,6 +371,8 @@ TARGET_LDFLAGS      += "-Wl,--copy-dt-needed-entries"
 EXTRA_OEMAKE:append  = 'LDFLAGS="${TARGET_LDFLAGS}"'
 ```
 6 - create rpiplay direcotory that included this patch 0001_fix_include_dir_gstreamer.patch
+
+
 ![patch](patch.png)
 
 7 - go to 0001_fix_include_dir_gstreamer.patch and add this 
@@ -513,6 +515,7 @@ index dee6d50..7043e4b 100644
 8 - if you encounter this error
 
 ![rpiplay_cmake_error](rpiplay_cmake_error.png)
+
 
 - to solve this error:
   1 - firstly make sure the ilclient source and header file is exist in userland directory
