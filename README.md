@@ -109,6 +109,8 @@ git clone -b kirkstone git://git.yoctoproject.org/meta-raspberrypi
 git clone -b kirkstone git://git.openembedded.org/openembedded-core
 ```
 6- so now after cloning both you will find meta-oe layer inside openembedded-core layer by default
+
+
 7- add meta-oe to the bblayers.conf
 
 ```bash
@@ -226,10 +228,15 @@ VIRTUAL-RUNTIME_initscript = "systemd-compat-units"
 
 ### 5-create your own image recipe (ivi-test-image)
  1- go to meta-IVI directory
+ 
  2- create receipes-core directory
+ 
  3- go to receipes-core 
+ 
  4- create images directory 
+ 
  5- create ivi-test-image.bb
+ 
  6- add this to ivi-test-image.bb
 
  ```bash
@@ -258,6 +265,7 @@ IMAGE_FEATURES:append=" debug-tweaks"
 ```
 ### 6- Access root through through ssh using empty password
 1- go to ivi-test-image.bb
+
 2- add debug-tweaks
 ```bash
 # IMAGE_INSTALL ssh
@@ -268,6 +276,7 @@ IMAGE_FEATURES:append=" debug-tweaks"
 
 ### 7-Inegrate ssh 
 1-go to ivi-test-image.bb
+
 2- add openssh
 ```bash
 #3- customize the image 
@@ -276,9 +285,13 @@ IMAGE_INSTALL:append=" openssh "
 
 ### 8- Inegrate nano
 1- go to meta-IVI directory
+
 2- create receipes-editor
+
 3- go to receipes-editor
+
 4- create nano directory 
+
 5- create nano receipe using this 
 
 ```bash
@@ -287,6 +300,7 @@ recipetool create -o nano_1.0.bb  https://git.savannah.gnu.org/git/nano.git
 ![nano](./nano.png)
 
 7- bitbake -c fetch nano  ---> here I only run specifc task of nano recipe (fetch)
+
 8- bitbake -c unpack nano  ---> here I only run specifc task of nano recipe (unpack)
 
 6- add do_configre and do_build to nano receipe
@@ -497,7 +511,145 @@ index dee6d50..7043e4b 100644
 ```
 
 8 - if you encounter this error
+
 ![rpiplay_cmake_error](rpiplay_cmake_error.png)
+
+- to solve this error:
+  1 - firstly make sure the ilclient source and header file is exist in userland directory
+  go to (your_build_direcory_path/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/userland/20220323-r0/git/host_applications/linux/apps/hello_pi/libs/ilclient)
+  then run command ls to see the content of the directory
+  you should find this directories
+  ilclient.c  ilclient.h  ilcore.c  Makefile
+
+  2 - go to (your_build_direcory_path/yocto_training/poky/my_rpi_3_build/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/rpi-play/1.0+gitAUTOINC+64d0341ed3-r0/git/renderers)
+  ex--> /home/sabry/yocto_training/poky/my_rpi_3_build/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/rpi-play/1.0+gitAUTOINC+64d0341ed3-r0/git/renderers
+
+  3 - open CMakeLists.txt
+
+  4 - replace the content of CMakeLists.txt with this (make sure to modify paths with your actual path) with those modification :
+  
+      # Modifications Made
+      
+      ## 1. Define the Path for ilclient Source Files
+      Added a variable `ILCLIENT_DIR` to define the path to the directory containing the ilclient source files:
+      
+      ```cmake
+      set(ILCLIENT_DIR "/home/sabry/yocto_training/poky/my_rpi_3_build/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/userland/20220323-r0/git/host_applications/linux/apps/hello_pi/libs/ilclient")
+      ```
+      
+      ## 2. Specify the ilclient Source Files
+      Created a variable `ILCLIENT_SOURCES` to include the necessary source files:
+      
+      ```cmake
+      set(ILCLIENT_SOURCES ${ILCLIENT_DIR}/ilclient.c ${ILCLIENT_DIR}/ilcore.c)
+      ```
+      
+      ## 3. Add the ilclient Library
+      Used `add_library` to create the ilclient static library with the specified source files:
+      
+      ```cmake
+      add_library(ilclient STATIC ${ILCLIENT_SOURCES})
+      ```
+      
+      ## 4. Link the ilclient Library
+      Updated the `target_link_libraries` command to link against the ilclient library after it has been defined:
+      
+      ```cmake
+      target_link_libraries(ilclient ${BRCM_GLES_V2} ${BRCM_EGL} ${OPENMAXIL} ${BCM_HOST} ${VCOS} ${VCHIQ_ARM} pthread rt m)
+      ```
+  
+  5 - The final CMakeLists.txt ant renderers dir will be like this
+  
+    ```bash
+    cmake_minimum_required(VERSION 3.4.1)
+    
+    # Common x86/x86_64 cflags
+    
+    # Always compile the dummy renderers
+    set(RENDERER_FLAGS "${RENDERER_FLAGS} -DHAS_DUMMY_RENDERER")
+    set(RENDERER_SOURCES audio_renderer_dummy.c video_renderer_dummy.c)
+    set(RENDERER_LINK_LIBS "")
+    set(RENDERER_INCLUDE_DIRS "")
+    
+    # Check for availability of OpenMAX libraries on Raspberry Pi
+    find_library(BRCM_GLES_V2 brcmGLESv2 HINTS ${CMAKE_SYSROOT}/usr/lib/)
+    find_library(BRCM_EGL brcmEGL HINTS ${CMAKE_SYSROOT}/usr/lib/)
+    find_library(OPENMAXIL openmaxil HINTS ${CMAKE_SYSROOT}/usr/lib/)
+    find_library(BCM_HOST bcm_host HINTS ${CMAKE_SYSROOT}/usr/lib/)
+    find_library(VCOS vcos HINTS ${CMAKE_SYSROOT}/usr/lib/)
+    find_library(VCHIQ_ARM vchiq_arm HINTS ${CMAKE_SYSROOT}/usr/lib/)
+    
+    if(BRCM_GLES_V2 AND BRCM_EGL AND OPENMAXIL AND BCM_HOST AND VCOS AND VCHIQ_ARM)
+      message(STATUS "Found OpenMAX libraries for Raspberry Pi")
+      
+      include_directories(${CMAKE_SYSROOT}/usr/include/ 
+                          ${CMAKE_SYSROOT}/usr/include/interface/vcos/pthreads 
+                          ${CMAKE_SYSROOT}/usr/include/interface/vmcs_host/linux 
+                          ${CMAKE_SYSROOT}/usr/src/hello_pi/libs/ilclient
+                          /home/sabry/yocto_training/poky/my_rpi_3_build/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/userland/20220323-r0/git/host_applications/linux/apps/hello_pi/libs/ilclient) # Include path for ilclient
+    
+      option(BUILD_SHARED_LIBS "" OFF)
+      add_subdirectory(fdk-aac EXCLUDE_FROM_ALL)
+      add_subdirectory(h264-bitstream)
+    
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi")
+    
+      # Specify ilclient sources
+      set(ILCLIENT_DIR "/home/sabry/yocto_training/poky/my_rpi_3_build/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/userland/20220323-r0/git/host_applications/linux/apps/hello_pi/libs/ilclient")
+      set(ILCLIENT_SOURCES ${ILCLIENT_DIR}/ilclient.c ${ILCLIENT_DIR}/ilcore.c)
+    
+      add_library(ilclient STATIC ${ILCLIENT_SOURCES})
+    
+      target_link_libraries(ilclient ${BRCM_GLES_V2} ${BRCM_EGL} ${OPENMAXIL} 
+                             ${BCM_HOST} ${VCOS} ${VCHIQ_ARM} pthread rt m)
+    
+      set(RENDERER_FLAGS "${RENDERER_FLAGS} -DHAS_RPI_RENDERER")
+      set(RENDERER_SOURCES ${RENDERER_SOURCES} audio_renderer_rpi.c video_renderer_rpi.c)
+      set(RENDERER_LINK_LIBS ${RENDERER_LINK_LIBS} ilclient airplay fdk-aac h264-bitstream)
+    else()
+      message(STATUS "OpenMAX libraries not found, skipping compilation of Raspberry Pi renderer")
+    endif()
+    
+    # Use GStreamer
+    include_directories(${CMAKE_SYSROOT}/usr/include/gstreamer-1.0/ 
+                        ${CMAKE_SYSROOT}/usr/include/glib-2.0/
+                        ${CMAKE_SYSROOT}/usr/include
+                        ${CMAKE_SYSROOT}/usr/lib/glib-2.0/include/
+                        ${CMAKE_SYSROOT}/usr/lib/gstreamer-1.0/include/
+                        ${CMAKE_SYSROOT}/usr/lib/)
+    
+    link_libraries(${CMAKE_SYSROOT}/usr/lib/ 
+                   ${CMAKE_SYSROOT}/lib/ 
+                   ${CMAKE_SYSROOT}/usr/lib/gstreamer-1.0 
+                   ${CMAKE_SYSROOT}/usr/lib/glib-2.0)
+    
+    # Check for availability of GStreamer
+    find_package(PkgConfig)
+    if(PKG_CONFIG_FOUND)
+      pkg_check_modules(GST gstreamer-1.0>=1.4
+                            gstreamer-sdp-1.0>=1.4
+                            gstreamer-video-1.0>=1.4
+                            gstreamer-app-1.0>=1.4)
+      if(GST_FOUND)
+        set(RENDERER_FLAGS "${RENDERER_FLAGS} -DHAS_GSTREAMER_RENDERER")
+        set(RENDERER_SOURCES ${RENDERER_SOURCES} audio_renderer_gstreamer.c video_renderer_gstreamer.c)
+        set(RENDERER_LINK_LIBS ${RENDERER_LINK_LIBS} ${GST_LIBRARIES})
+        set(RENDERER_INCLUDE_DIRS ${RENDERER_INCLUDE_DIRS} ${GST_INCLUDE_DIRS})
+      else()
+        message(STATUS "GStreamer not found, skipping compilation of GStreamer renderer")
+      endif()
+    else()
+      message(STATUS "pkg-config not found, skipping compilation of GStreamer renderer")
+    endif()
+    
+    # Create the renderers library and link against everything
+    add_library(renderers STATIC ${RENDERER_SOURCES})
+    target_link_libraries(renderers ${RENDERER_LINK_LIBS})
+    target_include_directories(renderers PRIVATE ${RENDERER_INCLUDE_DIRS})
+    
+    # Pass the final renderer flags up to the parent scope so it knows which renderers will be available to use.
+    set(RENDERER_FLAGS "${RENDERER_FLAGS}" PARENT_SCOPE)
+  ```
 
 ### 10- integrate AUDIO
 - note this is the view of the audio stack
@@ -505,11 +657,15 @@ index dee6d50..7043e4b 100644
   ![audio](audio_stack.png)
 
  1- go to meta-IVI directory
+ 
  2- create classes directory and go to it
+ 
  3- create audio.bbclass
  ![audio_class](audio_class.png)
  
  4- add this to audio.bbclass
+
+ 
  ```bash
 IMAGE_INSTALL:append = " pavucontrol pulseaudio pulseaudio-module-dbus-protocol pulseaudio-server \
                         pulseaudio-module-loopback pulseaudio-module-bluez5-device pulseaudio-module-bluez5-discover \
