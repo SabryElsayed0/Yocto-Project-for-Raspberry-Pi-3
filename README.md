@@ -518,6 +518,7 @@ index dee6d50..7043e4b 100644
 
 
 - to solve this error:
+  
   1 - firstly make sure the ilclient source and header file is exist in userland directory
   go to (your_build_direcory_path/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-oe-linux-gnueabi/userland/20220323-r0/git/host_applications/linux/apps/hello_pi/libs/ilclient)
   then run command ls to see the content of the directory
