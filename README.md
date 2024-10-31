@@ -314,9 +314,13 @@ run ./autogen.sh
 
 ### 9- integrate rpiplay
  1- go to meta-IVI directory
+ 
  2- create receipes-info and go to it
+ 
  3- create rpi-play directory
+ 
  4- create rpiplay.bb
+ 
 ```bash
 recipetool create -o rpi-play_1.0.bb https://github.com/FD-/RPiPlay      
  3- create audio.bbclass
@@ -352,6 +356,8 @@ EXTRA_OECMAKE        = ""
 TARGET_LDFLAGS      += "-Wl,--copy-dt-needed-entries"
 EXTRA_OEMAKE:append  = 'LDFLAGS="${TARGET_LDFLAGS}"'
 ```
+6 - create rpiplay direcotory that included this patch 0001_fix_include_dir_gstreamer.patch
+![patch](patch.png)
 
 ### 10- integrate AUDIO
 - note this is the view of the audio stack
